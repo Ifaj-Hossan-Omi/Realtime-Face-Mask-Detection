@@ -25,7 +25,7 @@ EPOCHS = 20
 INITIAL_LEARNING_RATE = 1e-4
 BATCH_SIZE = 32
 
-print(">>>> Loading images <<<<")
+print(">>>> Loading Dataset <<<<")
 
 DIRECTORY = r"C:\Users\omiif\Desktop\Face-Mask-Detection\Dataset"
 CATEGORIES = ["with_mask", "without_mask"]
