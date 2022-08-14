@@ -25,7 +25,7 @@ EPOCHS = 20
 INITIAL_LEARNING_RATE = 1e-4
 BATCH_SIZE = 32
 
-print("[INFO] loading images...")
+print(">>>> Loading images <<<<")
 
 DIRECTORY = r"C:\Users\omiif\Desktop\Face-Mask-Detection\Dataset"
 CATEGORIES = ["with_mask", "without_mask"]
@@ -81,13 +81,13 @@ for layer in baseModel.layers:
     layer.trainable = False
 
 # compiling the model
-print("Compilation of the MODEL is going on...")
+print("MODEL Compilation is started >>")
 opt = Adam(lr=INITIAL_LEARNING_RATE, decay=INITIAL_LEARNING_RATE / EPOCHS)
 model.compile(loss="binary_crossentropy", optimizer=opt,
               metrics=["accuracy"])
 
 # training the model network
-print("Training Head Started...")
+print("Training Head Started >>")
 H = model.fit(
     aug.flow(trainX, trainY, batch_size=BATCH_SIZE),
     steps_per_epoch=len(trainX) // BATCH_SIZE,
@@ -96,15 +96,15 @@ H = model.fit(
     epochs=EPOCHS)
 
 # predictions
-print("Network evaluation...")
+print("Testing Starting >>")
 predIdxs = model.predict(testX, batch_size=BATCH_SIZE)
 predIdxs = np.argmax(predIdxs, axis=1)
 print(classification_report(testY.argmax(axis=1), predIdxs,
                             target_names=lb.classes_))
 
 # saving the model
-print("saving mask model...")
-model.save("mask_detector.model", save_format="h5")
+print("Model Saving to the loacl directory")
+model.save("Mask_Detector_Model.model", save_format="h5")
 
 # ploting the accuracy and loss
 N = EPOCHS
@@ -117,6 +117,5 @@ plt.plot(np.arange(0, N), H.history["val_accuracy"], label="val_acc")
 plt.title("Modle Accuracy and Loss")
 plt.xlabel("Epoch")
 plt.ylabel("Accuracy & Loss")
-plt.axes.set_facecolor('black')
 plt.legend(loc="lower right")
 plt.savefig("Accuracy&Loss.jpg")
