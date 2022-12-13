@@ -19,7 +19,8 @@ import numpy as np
 import os
 from imutils import paths
 import matplotlib.pyplot as plt
-
+import tensorflow as tf
+tf.config.list_physical_devices('GPU')
 
 EPOCHS = 20
 INITIAL_LEARNING_RATE = 1e-4
@@ -27,7 +28,7 @@ BATCH_SIZE = 32
 
 print(">>>> Loading Dataset <<<<")
 
-DIRECTORY = r"C:\Users\omiif\Desktop\Face-Mask-Detection\Dataset"
+DIRECTORY = r".\Dataset"
 CATEGORIES = ["with_mask", "without_mask"]
 data = []
 labels = []
@@ -64,6 +65,7 @@ aug = ImageDataGenerator(
     horizontal_flip=True,
     fill_mode="nearest")
 
+
 # CNN: MobileNetV2
 baseModel = MobileNetV2(weights="imagenet", include_top=False,
                         input_tensor=Input(shape=(224, 224, 3)))
@@ -79,28 +81,28 @@ model = Model(inputs=baseModel.input, outputs=headModel)
 
 for layer in baseModel.layers:
     layer.trainable = False
+with tf.device('/GPU:0'):
+    # compiling the model
+    print("MODEL Compilation is started >>")
+    opt = Adam(lr=INITIAL_LEARNING_RATE, decay=INITIAL_LEARNING_RATE / EPOCHS)
+    model.compile(loss="binary_crossentropy", optimizer=opt,
+                  metrics=["accuracy"])
 
-# compiling the model
-print("MODEL Compilation is started >>")
-opt = Adam(lr=INITIAL_LEARNING_RATE, decay=INITIAL_LEARNING_RATE / EPOCHS)
-model.compile(loss="binary_crossentropy", optimizer=opt,
-              metrics=["accuracy"])
+    # training the model network
+    print("Training Head Started >>")
+    H = model.fit(
+        aug.flow(trainX, trainY, batch_size=BATCH_SIZE),
+        steps_per_epoch=len(trainX) // BATCH_SIZE,
+        validation_data=(testX, testY),
+        validation_steps=len(testX) // BATCH_SIZE,
+        epochs=EPOCHS)
 
-# training the model network
-print("Training Head Started >>")
-H = model.fit(
-    aug.flow(trainX, trainY, batch_size=BATCH_SIZE),
-    steps_per_epoch=len(trainX) // BATCH_SIZE,
-    validation_data=(testX, testY),
-    validation_steps=len(testX) // BATCH_SIZE,
-    epochs=EPOCHS)
-
-# predictions
-print("Testing Starting >>")
-predIdxs = model.predict(testX, batch_size=BATCH_SIZE)
-predIdxs = np.argmax(predIdxs, axis=1)
-print(classification_report(testY.argmax(axis=1), predIdxs,
-                            target_names=lb.classes_))
+    # predictions
+    print("Testing Starting >>")
+    predIdxs = model.predict(testX, batch_size=BATCH_SIZE)
+    predIdxs = np.argmax(predIdxs, axis=1)
+    print(classification_report(testY.argmax(axis=1), predIdxs,
+                                target_names=lb.classes_))
 
 # saving the model
 print("Model Saving to the loacl directory")
